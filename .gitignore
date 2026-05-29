@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+npm-debug.log
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+
+# Database
+*.db
+*.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Backend
+backend/node_modules/
+backend/.env
+
+# Frontend
+*.tmp

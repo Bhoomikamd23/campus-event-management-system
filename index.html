@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Events - Home</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <h2><i class="fas fa-calendar-alt"></i> CampusEvents</h2>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="events.html">Events</a></li>
+                <li><a href="login.html">Login</a></li>
+                <li><a href="register.html">Register</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Discover Amazing Campus Events</h1>
+            <p>Workshops • Hackathons • Cultural Fests • Sports Tournaments</p>
+            <a href="events.html" class="btn btn-primary">Explore Events</a>
+        </div>
+    </section>
+
+    <section class="featured-events">
+        <div class="container">
+            <h2 class="section-title">Featured Events</h2>
+            <div class="events-grid" id="featuredEvents">
+                <!-- Events will load here -->
+            </div>
+        </div>
+    </section>
+
+    <section class="categories">
+        <div class="container">
+            <h2 class="section-title">Event Categories</h2>
+            <div class="categories-grid">
+                <div class="category-card">
+                    <i class="fas fa-laptop-code"></i>
+                    <h3>Workshops</h3>
+                    <p>Hands-on learning sessions</p>
+                </div>
+                <div class="category-card">
+                    <i class="fas fa-code"></i>
+                    <h3>Hackathons</h3>
+                    <p>24-hour coding challenges</p>
+                </div>
+                <div class="category-card">
+                    <i class="fas fa-music"></i>
+                    <h3>Cultural</h3>
+                    <p>Music, dance & arts</p>
+                </div>
+                <div class="category-card">
+                    <i class="fas fa-futbol"></i>
+                    <h3>Sports</h3>
+                    <p>Tournaments & competitions</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Campus Events Management System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/mock-data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
