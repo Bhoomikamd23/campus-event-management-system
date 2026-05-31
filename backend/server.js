@@ -194,6 +194,183 @@ app.delete('/api/registrations/:eventId', async (req, res) => {
 app.get('/api/test', (req, res) => {
     res.json({ message: 'Backend running!' });
 });
+// ============ ORGANIZER EVENT ROUTES ============
 
+// Create new event (Organizer only)
+// ============ ORGANIZER EVENT ROUTES ============
+
+// Create new event
+app.post('/api/organizer/events', async (req, res) => {
+    try {
+        console.log('📝 Create event request received:', req.body);
+        
+        const { eventName, description, date, venue, category, participantLimit, organizerId, organizerName } = req.body;
+        
+        // Validate required fields
+        if (!eventName || !venue || !date) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'Missing required fields: eventName, venue, date are required' 
+            });
+        }
+        
+        const db = mongoose.connection.db;
+        const { ObjectId } = require('mongodb');
+        
+        const newEvent = {
+            eventName: eventName,
+            description: description || '',
+            date: new Date(date),
+            venue: venue,
+            category: category || 'workshop',
+            participantLimit: parseInt(participantLimit) || 100,
+            currentRegistrations: 0,
+            organizerId: organizerId,
+            organizerName: organizerName || 'Organizer',
+            status: "upcoming",
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+        
+        const result = await db.collection('events').insertOne(newEvent);
+        
+        console.log('✅ Event saved to MongoDB with ID:', result.insertedId);
+        
+        res.status(201).json({ 
+            success: true, 
+            message: 'Event created successfully',
+            event: { ...newEvent, _id: result.insertedId }
+        });
+    } catch (err) {
+        console.error('❌ Create event error:', err);
+        res.status(500).json({ 
+            success: false,
+            message: err.message 
+        });
+    }
+});
+
+// Get events by organizer
+app.get('/api/organizer/my-events/:organizerId', async (req, res) => {
+    try {
+        console.log('📋 Fetching events for organizer:', req.params.organizerId);
+        
+        const db = mongoose.connection.db;
+        const events = await db.collection('events')
+            .find({ organizerId: req.params.organizerId })
+            .sort({ createdAt: -1 })
+            .toArray();
+        
+        console.log(`✅ Found ${events.length} events for organizer`);
+        res.json(events);
+    } catch (err) {
+        console.error('Error fetching events:', err);
+        res.status(500).json({ 
+            success: false,
+            message: err.message 
+        });
+    }
+});
+
+// Update event
+app.put('/api/organizer/events/:eventId', async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        const { eventName, description, date, venue, category, participantLimit } = req.body;
+        
+        console.log('📝 Updating event:', eventId);
+        
+        const db = mongoose.connection.db;
+        const { ObjectId } = require('mongodb');
+        
+        const updateData = {
+            eventName: eventName,
+            description: description || '',
+            date: new Date(date),
+            venue: venue,
+            category: category,
+            participantLimit: parseInt(participantLimit),
+            updatedAt: new Date()
+        };
+        
+        const result = await db.collection('events').updateOne(
+            { _id: new ObjectId(eventId) },
+            { $set: updateData }
+        );
+        
+        if (result.modifiedCount === 0) {
+            return res.status(404).json({ 
+                success: false,
+                message: 'Event not found or no changes made' 
+            });
+        }
+        
+        console.log('✅ Event updated successfully:', eventId);
+        
+        res.json({ 
+            success: true, 
+            message: 'Event updated successfully' 
+        });
+    } catch (err) {
+        console.error('Update error:', err);
+        res.status(500).json({ 
+            success: false,
+            message: err.message 
+        });
+    }
+});
+
+// Delete event
+app.delete('/api/organizer/events/:eventId', async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        const { organizerId } = req.body;
+        
+        console.log('🗑️ Deleting event:', eventId, 'by organizer:', organizerId);
+        
+        const db = mongoose.connection.db;
+        const { ObjectId } = require('mongodb');
+        
+        // First, check if event exists and belongs to organizer
+        const event = await db.collection('events').findOne({ 
+            _id: new ObjectId(eventId),
+            organizerId: organizerId
+        });
+        
+        if (!event) {
+            return res.status(404).json({ 
+                success: false,
+                message: 'Event not found or you do not have permission' 
+            });
+        }
+        
+        // Delete all registrations for this event
+        const regResult = await db.collection('registrations').deleteMany({ eventId: eventId });
+        console.log(`📋 Deleted ${regResult.deletedCount} registrations`);
+        
+        // Delete the event
+        const eventResult = await db.collection('events').deleteOne({ _id: new ObjectId(eventId) });
+        
+        if (eventResult.deletedCount === 0) {
+            return res.status(404).json({ 
+                success: false,
+                message: 'Event not found' 
+            });
+        }
+        
+        console.log('✅ Event deleted successfully:', eventId);
+        
+        res.json({ 
+            success: true, 
+            message: 'Event deleted successfully' 
+        });
+    } catch (err) {
+        console.error('Delete error:', err);
+        res.status(500).json({ 
+            success: false,
+            message: err.message 
+        });
+    }
+});
 const PORT = 5002;
 app.listen(PORT, () => console.log(`🚀 Server on http://localhost:${PORT}`));

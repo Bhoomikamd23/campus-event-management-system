@@ -26,14 +26,14 @@
     <div class="auth-container">
         <div class="auth-card">
             <h2>Welcome Back!</h2>
-            <form id="loginForm">
+            <form id="loginForm" autocomplete="off">
                 <div class="form-group">
                     <label>Email Address</label>
-                    <input type="email" id="email" required placeholder="student@demo.com">
+                    <input type="email" id="email" autocomplete="off" required placeholder="your@email.com">
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" id="password" required placeholder="••••••••">
+                    <input type="password" id="password" autocomplete="new-password" required placeholder="Enter your password">
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">Login</button>
             </form>
@@ -43,51 +43,65 @@
     </div>
 
     <script>
-    const API_URL = 'http://localhost:5002/api';
-    
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
+        const API_URL = 'http://localhost:5002/api';
         
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+        // Clear form on page load
+        window.addEventListener('load', function() {
+            document.getElementById('loginForm').reset();
+        });
         
-        console.log('Login attempt:', email);
-        
-        try {
-            const response = await fetch(`${API_URL}/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            const data = await response.json();
-            console.log('Response:', data);
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
             
-            if (response.ok) {
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
-                showMessage('Login successful! Redirecting...', 'success');
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 1500);
-            } else {
-                showMessage(data.message || 'Login failed', 'error');
+            if (!email || !password) {
+                showMessage('Please enter email and password', 'error');
+                return;
             }
-        } catch (err) {
-            console.error('Error:', err);
-            showMessage('Server error. Please make sure backend is running on port 5001', 'error');
+            
+            console.log('Login attempt:', email);
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                console.log('Response:', data);
+                
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    showMessage('Login successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        if (data.user.role === 'organizer') {
+                            window.location.href = 'organizer-dashboard.html';
+                        } else {
+                            window.location.href = 'dashboard.html';
+                        }
+                    }, 1500);
+                } else {
+                    showMessage(data.message || 'Login failed', 'error');
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                showMessage('Server error. Please make sure backend is running on port 5002', 'error');
+            }
+        });
+        
+        function showMessage(msg, type) {
+            const msgDiv = document.getElementById('message');
+            msgDiv.textContent = msg;
+            msgDiv.className = `message ${type}`;
+            setTimeout(() => {
+                msgDiv.textContent = '';
+                msgDiv.className = 'message';
+            }, 3000);
         }
-    });
-    
-    function showMessage(msg, type) {
-        const msgDiv = document.getElementById('message');
-        msgDiv.textContent = msg;
-        msgDiv.className = `message ${type}`;
-        setTimeout(() => {
-            msgDiv.textContent = '';
-            msgDiv.className = 'message';
-        }, 3000);
-    }
-</script>
+    </script>
 </body>
 </html>

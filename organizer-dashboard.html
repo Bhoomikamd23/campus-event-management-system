@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizer Dashboard - Campus Events</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .organizer-container { padding: 40px 0; }
+        .welcome-banner {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .stat-card i { font-size: 2rem; color: #f39c12; margin-bottom: 10px; }
+        .stat-number { font-size: 2rem; font-weight: bold; color: #333; }
+        .create-event-form {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .create-event-form h3 { margin-bottom: 20px; color: #333; }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+        }
+        .form-group textarea { resize: vertical; height: 80px; }
+        .events-list {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .events-list h3 { margin-bottom: 20px; color: #333; }
+        .organizer-event-card {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #f39c12;
+        }
+        .organizer-event-card h4 { margin-bottom: 10px; color: #333; }
+        .organizer-event-card p { margin: 5px 0; color: #666; font-size: 0.9rem; }
+        .event-actions { margin-top: 10px; }
+        .edit-btn, .delete-btn {
+            padding: 5px 15px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .edit-btn { background: #3498db; color: white; }
+        .delete-btn { background: #e74c3c; color: white; }
+        .edit-btn:hover { background: #2980b9; }
+        .delete-btn:hover { background: #c0392b; }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 10px;
+        }
+        .close { float: right; font-size: 28px; cursor: pointer; }
+        .btn-primary {
+            background: #f39c12;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 100%;
+        }
+        .btn-primary:hover { background: #e67e22; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <h2><i class="fas fa-calendar-alt"></i> CampusEvents</h2>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="events.html">Events</a></li>
+                <li><a href="dashboard.html">Student Dashboard</a></li>
+                <li><a href="organizer-dashboard.html" class="active">Organizer Dashboard</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container organizer-container">
+        <div id="organizerContent">
+            <div style="text-align:center; padding:50px;">Loading organizer dashboard...</div>
+        </div>
+    </div>
+
+    <!-- Edit Event Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>Edit Event</h3>
+            <input type="hidden" id="editEventId">
+            <div class="form-group">
+                <input type="text" id="editEventName" placeholder="Event Name" required>
+            </div>
+            <div class="form-group">
+                <textarea id="editDescription" placeholder="Description" required></textarea>
+            </div>
+            <div class="form-group">
+                <input type="date" id="editDate" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="editVenue" placeholder="Venue" required>
+            </div>
+            <div class="form-group">
+                <select id="editCategory">
+                    <option value="workshop">Workshop</option>
+                    <option value="hackathon">Hackathon</option>
+                    <option value="cultural">Cultural</option>
+                    <option value="sports">Sports</option>
+                    <option value="seminar">Seminar</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="number" id="editParticipantLimit" placeholder="Participant Limit" required>
+            </div>
+            <button onclick="updateEvent()" class="btn-primary">Update Event</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5002/api';
+        let currentUser = null;
+        
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const userStr = localStorage.getItem('user');
+            
+            if (!token || !userStr) {
+                alert('Please login first');
+                window.location.href = 'login.html';
+                return false;
+            }
+            
+            currentUser = JSON.parse(userStr);
+            
+            if (currentUser.role !== 'organizer' && currentUser.role !== 'admin') {
+                alert('Access denied. Organizer dashboard only.');
+                window.location.href = 'dashboard.html';
+                return false;
+            }
+            return true;
+        }
+        
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'index.html';
+        }
+        
+        async function loadOrganizerDashboard() {
+            if (!checkAuth()) return;
+            
+            const container = document.getElementById('organizerContent');
+            
+            container.innerHTML = `
+                <div class="welcome-banner">
+                    <h2><i class="fas fa-calendar-alt"></i> Organizer Dashboard</h2>
+                    <h3>Welcome, ${currentUser.name}!</h3>
+                    <p>Manage your events from here</p>
+                </div>
+                
+                <div class="create-event-form">
+                    <h3><i class="fas fa-plus-circle"></i> Create New Event</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input type="text" id="eventName" placeholder="Event Name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="date" id="eventDate" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input type="text" id="eventVenue" placeholder="Venue" required>
+                        </div>
+                        <div class="form-group">
+                            <select id="eventCategory">
+                                <option value="workshop">Workshop</option>
+                                <option value="hackathon">Hackathon</option>
+                                <option value="cultural">Cultural</option>
+                                <option value="sports">Sports</option>
+                                <option value="seminar">Seminar</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <textarea id="eventDescription" placeholder="Event Description" required></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input type="number" id="eventParticipantLimit" placeholder="Participant Limit" required>
+                        </div>
+                    </div>
+                    <button onclick="createNewEvent(event)" class="btn-primary">Create Event</button>
+                </div>
+                
+                <div class="events-list">
+                    <h3><i class="fas fa-calendar-check"></i> My Events</h3>
+                    <div id="myEventsList">Loading your events...</div>
+                </div>
+            `;
+            
+            await loadMyEvents();
+        }
+        
+        async function loadMyEvents() {
+            const container = document.getElementById('myEventsList');
+            
+            try {
+                const response = await fetch(`${API_URL}/organizer/my-events/${currentUser.id}`);
+                const events = await response.json();
+                
+                if (events.length === 0) {
+                    container.innerHTML = '<p>You haven\'t created any events yet. Create your first event above!</p>';
+                    return;
+                }
+                
+                // Calculate statistics
+                const totalEvents = events.length;
+                const totalRegistrations = events.reduce((sum, e) => sum + (e.currentRegistrations || 0), 0);
+                
+                // Add stats to top if not already there
+                if (!document.querySelector('.stats-grid')) {
+                    const statsDiv = document.createElement('div');
+                    statsDiv.className = 'stats-grid';
+                    statsDiv.innerHTML = `
+                        <div class="stat-card">
+                            <i class="fas fa-calendar-alt"></i>
+                            <div class="stat-number">${totalEvents}</div>
+                            <p>Total Events</p>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-users"></i>
+                            <div class="stat-number">${totalRegistrations}</div>
+                            <p>Total Registrations</p>
+                        </div>
+                    `;
+                    const welcomeBanner = document.querySelector('.welcome-banner');
+                    if (welcomeBanner) {
+                        welcomeBanner.insertAdjacentElement('afterend', statsDiv);
+                    }
+                }
+                
+                container.innerHTML = events.map(event => `
+                    <div class="organizer-event-card">
+                        <h4><i class="fas fa-calendar-alt"></i> ${event.eventName}</h4>
+                        <p><i class="fas fa-calendar"></i> ${new Date(event.date).toLocaleDateString()}</p>
+                        <p><i class="fas fa-map-marker-alt"></i> ${event.venue}</p>
+                        <p><i class="fas fa-ticket-alt"></i> ${event.currentRegistrations || 0} / ${event.participantLimit} registered</p>
+                        <p><i class="fas fa-users"></i> Category: ${event.category}</p>
+                        <div class="event-actions">
+                            <button onclick="openEditModal('${event._id}', '${event.eventName}', '${event.description}', '${event.date}', '${event.venue}', '${event.category}', ${event.participantLimit})" class="edit-btn"><i class="fas fa-edit"></i> Edit</button>
+                            <button onclick="deleteEvent('${event._id}')" class="delete-btn"><i class="fas fa-trash"></i> Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (err) {
+                console.error('Error:', err);
+                container.innerHTML = '<p>Error loading events. Make sure backend is running on port 5002.</p>';
+            }
+        }
+        
+        async function createNewEvent(e) {
+            if (e) e.preventDefault();
+            
+            console.log('Create event function called');
+            
+            const eventName = document.getElementById('eventName').value;
+            const eventDescription = document.getElementById('eventDescription').value;
+            const eventDate = document.getElementById('eventDate').value;
+            const eventVenue = document.getElementById('eventVenue').value;
+            const eventCategory = document.getElementById('eventCategory').value;
+            const eventParticipantLimit = document.getElementById('eventParticipantLimit').value;
+            
+            console.log('Form values:', { eventName, eventVenue, eventDate, eventCategory });
+            
+            if (!eventName) {
+                alert('Please enter event name');
+                return;
+            }
+            if (!eventVenue) {
+                alert('Please enter venue');
+                return;
+            }
+            if (!eventDate) {
+                alert('Please select date');
+                return;
+            }
+            
+            const eventData = {
+                eventName: eventName,
+                description: eventDescription || '',
+                date: eventDate,
+                venue: eventVenue,
+                category: eventCategory,
+                participantLimit: parseInt(eventParticipantLimit) || 50,
+                organizerId: currentUser.id,
+                organizerName: currentUser.name
+            };
+            
+            console.log('Sending event data:', eventData);
+            
+            try {
+                const response = await fetch(`${API_URL}/organizer/events`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(eventData)
+                });
+                
+                const data = await response.json();
+                console.log('Response:', data);
+                
+                if (response.ok) {
+                    alert('✅ Event created successfully!');
+                    // Clear form
+                    document.getElementById('eventName').value = '';
+                    document.getElementById('eventDescription').value = '';
+                    document.getElementById('eventDate').value = '';
+                    document.getElementById('eventVenue').value = '';
+                    document.getElementById('eventParticipantLimit').value = '';
+                    // Reload dashboard
+                    loadOrganizerDashboard();
+                } else {
+                    alert('❌ Error: ' + (data.message || 'Could not create event'));
+                }
+            } catch (err) {
+                console.error('Create error:', err);
+                alert('Error creating event: ' + err.message);
+            }
+        }
+        
+        function openEditModal(eventId, eventName, description, date, venue, category, participantLimit) {
+            document.getElementById('editModal').style.display = 'block';
+            document.getElementById('editEventId').value = eventId;
+            document.getElementById('editEventName').value = eventName;
+            document.getElementById('editDescription').value = description;
+            document.getElementById('editDate').value = date.split('T')[0];
+            document.getElementById('editVenue').value = venue;
+            document.getElementById('editCategory').value = category;
+            document.getElementById('editParticipantLimit').value = participantLimit;
+        }
+        
+        async function updateEvent() {
+            const eventId = document.getElementById('editEventId').value;
+            const eventData = {
+                eventName: document.getElementById('editEventName').value,
+                description: document.getElementById('editDescription').value,
+                date: document.getElementById('editDate').value,
+                venue: document.getElementById('editVenue').value,
+                category: document.getElementById('editCategory').value,
+                participantLimit: parseInt(document.getElementById('editParticipantLimit').value)
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/organizer/events/${eventId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(eventData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('✅ Event updated successfully!');
+                    closeModal();
+                    loadOrganizerDashboard();
+                } else {
+                    alert('❌ Error: ' + (data.message || 'Could not update event'));
+                }
+            } catch (err) {
+                console.error('Update error:', err);
+                alert('Error updating event');
+            }
+        }
+        
+        async function deleteEvent(eventId) {
+            if (!confirm('Are you sure you want to delete this event? This will also delete all registrations.')) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/organizer/events/${eventId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ organizerId: currentUser.id })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('✅ Event deleted successfully!');
+                    loadOrganizerDashboard();
+                } else {
+                    alert('❌ Error: ' + (data.message || 'Could not delete event'));
+                }
+            } catch (err) {
+                console.error('Delete error:', err);
+                alert('Error deleting event');
+            }
+        }
+        
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+        
+        // Load dashboard on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Organizer dashboard loaded');
+            loadOrganizerDashboard();
+        });
+    </script>
+</body>
+</html>
